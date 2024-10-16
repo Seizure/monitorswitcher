@@ -9,7 +9,7 @@ from monitorboss.impl import list_monitors, get_feature, set_feature, toggle_fea
 from monitorboss.info import feature_data, monitor_data, value_data, capability_data, capability_summary_data
 from monitorboss.output import caps_raw_output, caps_parsed_output, list_mons_output, \
     get_feature_output, set_feature_output, tog_feature_output
-from pyddc import parse_capabilities, get_vcp_com
+from pyddc import parse_capabilities, get_vcp_com, VCPError
 from pyddc.vcp_codes import VCPCodes, VCPCommand
 
 _log = getLogger(__name__)
@@ -120,11 +120,15 @@ def _get_feature(args, cfg: Config):
     cur_vals = []
     max_vals = []
     for i, m in enumerate(mons):
-        ret = get_feature(m, vcpcom, cfg.wait_internal_time)
-        cur_vals.append(ret.value)
-        # TODO: discuss whether we actually want to obscure discrete "maxes"... is there a reason to?
-        #   could be assigned a different name in json/strings for when it's discreet, eg "options"
-        max_vals.append(None if vcpcom.discrete else ret.max)
+        try:
+            ret = get_feature(m, vcpcom, cfg.wait_internal_time)
+            cur_vals.append(ret.value)
+            # TODO: discuss whether we actually want to obscure discrete "maxes"... is there a reason to?
+            #   could be assigned a different name in json/strings for when it's discreet, eg "options"
+            max_vals.append(None if vcpcom.discrete else ret.max)
+        except (VCPError, TypeError) as err:
+
+
         if i + 1 < len(mons):
             sleep(cfg.wait_get_time)
     monvalmax_list = []

@@ -22,6 +22,10 @@ class VCPPermissionError(VCPError):
     pass
 
 
+class VCPValueError(VCPError, ValueError):
+    pass
+
+
 @dataclass
 class VCPFeatureReturn:
     value: int
