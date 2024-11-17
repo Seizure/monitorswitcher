@@ -95,28 +95,27 @@ class CapabilityData:
     attributes: frozendict[str, str]
     cmds: frozendict[str, tuple[FeatureData, ...]]
     vcps: frozendict[str, frozendict[FeatureData, tuple[ValueData, ...]]]
-    errata: frozendict[str, tuple[str, ...]]  # TODO: not sure how to find/parse out errata rn
+    errata: frozendict[str, tuple[str, ...]] | None
 
     def serialize(self) -> dict:
-        # TODO: can we please unoptimize this? It makes my head hurt
-        return {
-            **self.attributes,
-            "cmds": {
-                cmd: [feature.serialize() for feature in features]
-                for cmd, features in self.cmds.items()
-            },
-            "vcps": {
-                vcp: [
-                    {
-                        "feature": feature.serialize(),
-                        **({"params": [param.serialize() for param in params]} if params else {}),
-                    }
-                    for feature, params in vcp_features.items()
-                ]
-                for vcp, vcp_features in self.vcps.items()
-            },
-            **({"errata": dict(self.errata)} if self.errata else {}),
-        }
+        serialized = dict(self.attributes)
+        cmds = {}
+        for cmd, features in self.cmds.items():
+            cmds[cmd] = [feature.serialize() for feature in features]
+        serialized["cmds"] = cmds
+        vcps = {}
+        for vcp, vcp_features in self.vcps.items():
+            vcp_data = []
+            for feature, params in vcp_features.items():
+                data = {"feature": feature.serialize()}
+                if params:
+                    data["params"] = [param.serialize() for param in params]
+                vcp_data.append(data)
+            vcps[vcp] = vcp_data
+        serialized["vcps"] = vcps
+        if self.errata:
+            serialized["errata"] = dict(self.errata)
+        return serialized
 
     def _attr_str(self) -> str:
         if not self.attributes:
