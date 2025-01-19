@@ -18,6 +18,9 @@ def list_mons_output(mons: list[MonitorData], json_output: bool) -> str:
 
     return "\n".join(map(str, mons))
 
+def get_feature_output_single(feature: FeatureData, value: ValueData, maximum: int | None, json_output: bool) -> str:
+    if json_output:
+
 
 def get_feature_output(feature: FeatureData, monvalues: list[tuple[MonitorData, ValueData, int | None]], json_output: bool) -> str:
     if json_output:
